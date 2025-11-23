@@ -56,9 +56,14 @@ MySQL Database
 
 **O que faz**:
 - Valida requisições usando Form Requests
-- Verifica autorização (quem pode fazer o quê)
+- Verifica autorização usando `$this->authorize()` com Policy (padrão Laravel)
 - Chama Services para executar lógica de negócio
 - Retorna respostas JSON formatadas
+
+**Autorização**:
+O Controller usa `$this->authorize()` para verificar permissões via Policy. Se a autorização falhar, o Laravel automaticamente retorna:
+- Status HTTP: `403 Forbidden`
+- Mensagem: `"This action is unauthorized."`
 
 **Exemplo de fluxo**:
 ```php
@@ -207,10 +212,29 @@ class TravelRequest extends Model
 - `viewAny()`: Todos podem listar pedidos
 - `view()`: Admin ou dono do pedido pode ver
 - `create()`: Todos podem criar pedidos
-- `update()`: Apenas dono pode atualizar
-- `delete()`: Apenas dono pode deletar
+- `update()`: Apenas dono pode atualizar **e** pedido não pode estar 'approved' ou 'cancelled'
+- `delete()`: Apenas dono pode deletar **e** pedido não pode estar 'approved' ou 'cancelled'
 - `approve()`: Apenas admin pode aprovar (e pedido deve estar 'requested')
 - `cancel()`: Admin pode cancelar qualquer pedido não aprovado; dono pode cancelar seu próprio pedido não aprovado
+
+**Uso no Controller**:
+Todos os métodos do Controller usam `$this->authorize()` para verificar permissões:
+```php
+// Exemplo no TravelRequestController
+$this->authorize('update', $travelRequest);
+```
+
+**Comportamento quando autorização falha**:
+Quando `$this->authorize()` retorna `false`, o Laravel automaticamente:
+- Lança uma exceção `AccessDeniedHttpException`
+- Retorna status HTTP: `403 Forbidden`
+- Retorna mensagem padrão: `"This action is unauthorized."`
+
+**Vantagens de usar `$this->authorize()`**:
+- ✅ Código mais limpo e consistente
+- ✅ Centralização da lógica de autorização no Policy
+- ✅ Facilita testes (Policy pode ser testado isoladamente)
+- ✅ Segue padrão recomendado do Laravel
 
 **Exemplo**:
 ```php
@@ -382,40 +406,44 @@ class WelcomeMail extends Mailable implements ShouldQueue
    Se inválido → retorna 422
    Se válido → continua
    ↓
-9. Controller chama TravelRequestService::create()
+9. Controller verifica autorização: $this->authorize('create', TravelRequest::class)
+   Se não autorizado → retorna 403
+   Se autorizado → continua
    ↓
-10. Service aplica lógica de negócio:
+10. Controller chama TravelRequestService::create()
+   ↓
+11. Service aplica lógica de negócio:
     - Define user_id = auth()->id()
     - Define requester_name = auth()->user()->name
     - Define status = 'requested'
     ↓
-11. Service chama TravelRequestRepository::create()
+12. Service chama TravelRequestRepository::create()
     ↓
-12. Repository executa TravelRequest::create($data)
+13. Repository executa TravelRequest::create($data)
     ↓
-13. Eloquent salva no MySQL
+14. Eloquent salva no MySQL
     ↓
-14. Repository retorna TravelRequest para Service
+15. Repository retorna TravelRequest para Service
     ↓
-15. Service dispara evento: event(new TravelRequestCreated($travelRequest))
+16. Service dispara evento: event(new TravelRequestCreated($travelRequest))
     ↓
-16. EventServiceProvider encontra listener: SendTravelRequestCreatedNotification
+17. EventServiceProvider encontra listener: SendTravelRequestCreatedNotification
     ↓
-17. Listener enfileira job no RabbitMQ (porque implementa ShouldQueue)
+18. Listener enfileira job no RabbitMQ (porque implementa ShouldQueue)
     ↓
-18. Service retorna TravelRequest para Controller
+19. Service retorna TravelRequest para Controller
     ↓
-19. Controller formata com TravelRequestResource
+20. Controller formata com TravelRequestResource
     ↓
-20. Controller retorna JSON 201 com dados do pedido
+21. Controller retorna JSON 201 com dados do pedido
     ↓
-21. Nginx retorna resposta para cliente
+22. Nginx retorna resposta para cliente
     ↓
-22. Worker (php-worker container) processa fila RabbitMQ
+23. Worker (php-worker container) processa fila RabbitMQ
     ↓
-23. Worker executa SendTravelRequestCreatedNotification::handle()
+24. Worker executa SendTravelRequestCreatedNotification::handle()
     ↓
-24. Listener envia email via Mailpit
+25. Listener envia email via Mailpit
 ```
 
 ---
@@ -803,26 +831,24 @@ rediscommander (Redis UI)
 - **Endpoint**: `PUT /api/travel-requests/{id}`
 - **Fluxo**:
   1. Valida dados (`UpdateTravelRequestRequest`)
-  2. Verifica se é dono do pedido
-  3. Verifica se status não é 'approved' ou 'cancelled'
-  4. Service::update() remove campos protegidos
-  5. Repository::update() atualiza no banco
-  6. Retorna pedido atualizado
+  2. Policy verifica se é dono do pedido **e** se status não é 'approved' ou 'cancelled' (via `$this->authorize('update', $travelRequest)`)
+  3. Se autorizado, Service::update() remove campos protegidos
+  4. Repository::update() atualiza no banco
+  5. Retorna pedido atualizado
 
 #### Deletar Pedido
 - **Endpoint**: `DELETE /api/travel-requests/{id}`
 - **Fluxo**:
-  1. Verifica se é dono do pedido
-  2. Verifica se status não é 'approved' ou 'cancelled'
-  3. Service::delete() → Repository::delete() (soft delete)
-  4. Retorna sucesso
+  1. Policy verifica se é dono do pedido **e** se status não é 'approved' ou 'cancelled' (via `$this->authorize('delete', $travelRequest)`)
+  2. Se autorizado, Service::delete() → Repository::delete() (soft delete)
+  3. Retorna sucesso
 
 #### Aprovar Pedido
 - **Endpoint**: `POST /api/travel-requests/{id}/approve`
 - **Permissão**: Apenas admin
 - **Fluxo**:
-  1. Policy verifica se é admin e status é 'requested'
-  2. Service::approve() atualiza:
+  1. Policy verifica se é admin e status é 'requested' (via `$this->authorize('approve', $travelRequest)`)
+  2. Se autorizado, Service::approve() atualiza:
      - `status` = 'approved'
      - `approved_by` = admin ID
   3. Dispara evento `TravelRequestApproved`
@@ -834,8 +860,8 @@ rediscommander (Redis UI)
 - **Body**: `{ "reason": "Motivo do cancelamento" }`
 - **Permissão**: Admin pode cancelar qualquer pedido não aprovado; dono pode cancelar seu próprio pedido não aprovado
 - **Fluxo**:
-  1. Policy verifica permissão e status
-  2. Service::cancel() atualiza:
+  1. Policy verifica permissão e status (via `$this->authorize('cancel', $travelRequest)`)
+  2. Se autorizado, Service::cancel() atualiza:
      - `status` = 'cancelled'
      - `cancelled_by` = usuário ID
      - `cancelled_reason` = motivo
