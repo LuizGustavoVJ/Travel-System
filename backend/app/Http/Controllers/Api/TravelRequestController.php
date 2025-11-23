@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTravelRequestRequest;
 use App\Http\Requests\UpdateTravelRequestRequest;
 use App\Http\Resources\TravelRequestResource;
+use App\Models\TravelRequest;
 use App\Services\TravelRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,9 @@ class TravelRequestController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        // Verifica autorização usando Policy
+        $this->authorize('viewAny', TravelRequest::class);
+
         $filters = $request->only(['status', 'destination', 'start_date', 'end_date', 'start_date_from', 'start_date_to', 'created_from', 'created_to']);
         $perPage = $request->input('per_page', 15);
 
@@ -35,6 +39,9 @@ class TravelRequestController extends Controller
      */
     public function store(StoreTravelRequestRequest $request): JsonResponse
     {
+        // Verifica autorização usando Policy
+        $this->authorize('create', TravelRequest::class);
+
         $travelRequest = $this->service->create(auth()->user(), $request->validated());
 
         return response()->json([
@@ -56,12 +63,8 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Verifica autorização
-        if (!auth()->user()->isAdmin() && $travelRequest->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
-        }
+        // Verifica autorização usando Policy
+        $this->authorize('view', $travelRequest);
 
         return response()->json([
             'data' => new TravelRequestResource($travelRequest),
@@ -81,19 +84,8 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Verifica autorização
-        if ($travelRequest->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
-        }
-
-        // Não permite atualizar pedidos aprovados ou cancelados
-        if (in_array($travelRequest->status, ['approved', 'cancelled'])) {
-            return response()->json([
-                'message' => 'Cannot update a travel request that is already ' . $travelRequest->status,
-            ], 403);
-        }
+        // Verifica autorização usando Policy (já verifica se é dono e se status permite)
+        $this->authorize('update', $travelRequest);
 
         $updated = $this->service->update($travelRequest, $request->validated());
 
@@ -116,19 +108,8 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Verifica autorização
-        if ($travelRequest->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
-        }
-
-        // Não permite deletar pedidos aprovados ou cancelados
-        if (in_array($travelRequest->status, ['approved', 'cancelled'])) {
-            return response()->json([
-                'message' => 'Cannot delete a travel request that is already ' . $travelRequest->status,
-            ], 403);
-        }
+        // Verifica autorização usando Policy (já verifica se é dono e se status permite)
+        $this->authorize('delete', $travelRequest);
 
         $this->service->delete($travelRequest);
 
@@ -150,12 +131,8 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Verifica autorização using Policy
-        if (!auth()->user()->can('approve', $travelRequest)) {
-            return response()->json([
-                'message' => 'Unauthorized. Only admins can approve travel requests.',
-            ], 403);
-        }
+        // Verifica autorização usando Policy
+        $this->authorize('approve', $travelRequest);
 
         $approved = $this->service->approve($travelRequest, auth()->user());
 
@@ -178,12 +155,8 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-         // Verifica autorização usando Policy
-        if (!auth()->user()->can('cancel', $travelRequest)) {
-            return response()->json([
-                'message' => 'Unauthorized. Cannot cancel an approved travel request.',
-            ], 403);
-        }
+        // Verifica autorização usando Policy
+        $this->authorize('cancel', $travelRequest);
 
         $reason = $request->input('reason');
         $cancelled = $this->service->cancel($travelRequest, auth()->user(), $reason);

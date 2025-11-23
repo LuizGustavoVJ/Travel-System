@@ -38,7 +38,9 @@ class TravelRequestPolicy
     public function update(User $user, TravelRequest $travelRequest): bool
     {
         // Only the owner can update their own travel request
-        return $travelRequest->user_id === $user->id;
+        // And the request must not be approved or cancelled
+        return $travelRequest->user_id === $user->id
+            && !in_array($travelRequest->status, ['approved', 'cancelled']);
     }
 
     /**
@@ -47,7 +49,9 @@ class TravelRequestPolicy
     public function delete(User $user, TravelRequest $travelRequest): bool
     {
         // Only the owner can delete their own travel request
-        return $travelRequest->user_id === $user->id;
+        // And the request must not be approved or cancelled
+        return $travelRequest->user_id === $user->id
+            && !in_array($travelRequest->status, ['approved', 'cancelled']);
     }
 
     /**

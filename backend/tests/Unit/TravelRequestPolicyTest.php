@@ -61,7 +61,10 @@ class TravelRequestPolicyTest extends TestCase
     public function test_user_can_update_their_own_travel_request(): void
     {
         $user = User::factory()->create();
-        $travelRequest = TravelRequest::factory()->create(['user_id' => $user->id]);
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+        ]);
 
         $this->assertTrue($this->policy->update($user, $travelRequest));
     }
@@ -74,10 +77,35 @@ class TravelRequestPolicyTest extends TestCase
         $this->assertFalse($this->policy->update($user, $otherUserRequest));
     }
 
+    public function test_user_cannot_update_approved_travel_request(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+        ]);
+
+        $this->assertFalse($this->policy->update($user, $travelRequest));
+    }
+
+    public function test_user_cannot_update_cancelled_travel_request(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'cancelled',
+        ]);
+
+        $this->assertFalse($this->policy->update($user, $travelRequest));
+    }
+
     public function test_user_can_delete_their_own_travel_request(): void
     {
         $user = User::factory()->create();
-        $travelRequest = TravelRequest::factory()->create(['user_id' => $user->id]);
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+        ]);
 
         $this->assertTrue($this->policy->delete($user, $travelRequest));
     }
@@ -88,6 +116,28 @@ class TravelRequestPolicyTest extends TestCase
         $otherUserRequest = TravelRequest::factory()->create();
 
         $this->assertFalse($this->policy->delete($user, $otherUserRequest));
+    }
+
+    public function test_user_cannot_delete_approved_travel_request(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+        ]);
+
+        $this->assertFalse($this->policy->delete($user, $travelRequest));
+    }
+
+    public function test_user_cannot_delete_cancelled_travel_request(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'cancelled',
+        ]);
+
+        $this->assertFalse($this->policy->delete($user, $travelRequest));
     }
 
     public function test_admin_can_approve_requested_travel_request(): void

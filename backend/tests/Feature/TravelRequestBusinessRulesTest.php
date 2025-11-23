@@ -31,7 +31,7 @@ class TravelRequestBusinessRulesTest extends TestCase
     public function test_admin_can_approve_requested_travel_request(): void
     {
         Event::fake();
-        
+
         [$admin, $token] = $this->authenticatedAdmin();
         $travelRequest = TravelRequest::factory()->create(['status' => 'requested']);
 
@@ -63,9 +63,10 @@ class TravelRequestBusinessRulesTest extends TestCase
         $response = $this->withHeader('Authorization', "Bearer $token")
             ->postJson("/api/travel-requests/{$travelRequest->id}/approve");
 
+        // Policy retorna mensagem padrão do Laravel quando usa $this->authorize()
         $response->assertStatus(403)
             ->assertJson([
-                'message' => 'Unauthorized. Only admins can approve travel requests.',
+                'message' => 'This action is unauthorized.',
             ]);
     }
 
@@ -83,7 +84,7 @@ class TravelRequestBusinessRulesTest extends TestCase
     public function test_admin_can_cancel_non_approved_travel_request(): void
     {
         Event::fake();
-        
+
         [$admin, $token] = $this->authenticatedAdmin();
         $travelRequest = TravelRequest::factory()->create(['status' => 'requested']);
 
@@ -118,16 +119,17 @@ class TravelRequestBusinessRulesTest extends TestCase
         $response = $this->withHeader('Authorization', "Bearer $token")
             ->postJson("/api/travel-requests/{$travelRequest->id}/cancel");
 
+        // Policy retorna mensagem padrão do Laravel quando usa $this->authorize()
         $response->assertStatus(403)
             ->assertJson([
-                'message' => 'Unauthorized. Cannot cancel an approved travel request.',
+                'message' => 'This action is unauthorized.',
             ]);
     }
 
     public function test_user_can_cancel_their_own_non_approved_travel_request(): void
     {
         Event::fake();
-        
+
         [$user, $token] = $this->authenticatedUser();
         $travelRequest = TravelRequest::factory()->create([
             'user_id' => $user->id,
