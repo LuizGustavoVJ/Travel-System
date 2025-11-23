@@ -137,11 +137,18 @@ export const useTravelRequestStore = defineStore('travelRequest', () => {
     pagination,
     // Actions
     fetchAll,
+    getTravelRequests: fetchAll,
     fetchById,
+    getTravelRequest: fetchById,
     create,
+    createTravelRequest: create,
     update,
+    updateTravelRequest: update,
     remove,
+    deleteTravelRequest: remove,
     approve,
-    cancel
+    approveTravelRequest: approve,
+    cancel,
+    cancelTravelRequest: cancel
   }
 })
