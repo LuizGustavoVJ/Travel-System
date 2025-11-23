@@ -121,4 +121,61 @@ class TravelRequestController extends Controller
             'message' => 'Travel request deleted successfully',
         ]);
     }
+
+    /**
+     * Approve a travel request.
+     */
+    public function approve(string $id): JsonResponse
+    {
+        $travelRequest = $this->service->getById($id);
+
+        if (!$travelRequest) {
+            return response()->json([
+                'message' => 'Travel request not found',
+            ], 404);
+        }
+
+        // Check authorization using Policy
+        if (!auth()->user()->can('approve', $travelRequest)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only admins can approve travel requests.',
+            ], 403);
+        }
+
+        $approved = $this->service->approve($travelRequest, auth()->user());
+
+        return response()->json([
+            'message' => 'Travel request approved successfully',
+            'data' => new TravelRequestResource($approved),
+        ]);
+    }
+
+    /**
+     * Cancel a travel request.
+     */
+    public function cancel(string $id, Request $request): JsonResponse
+    {
+        $travelRequest = $this->service->getById($id);
+
+        if (!$travelRequest) {
+            return response()->json([
+                'message' => 'Travel request not found',
+            ], 404);
+        }
+
+        // Check authorization using Policy
+        if (!auth()->user()->can('cancel', $travelRequest)) {
+            return response()->json([
+                'message' => 'Unauthorized. Cannot cancel an approved travel request.',
+            ], 403);
+        }
+
+        $reason = $request->input('reason');
+        $cancelled = $this->service->cancel($travelRequest, auth()->user(), $reason);
+
+        return response()->json([
+            'message' => 'Travel request cancelled successfully',
+            'data' => new TravelRequestResource($cancelled),
+        ]);
+    }
 }

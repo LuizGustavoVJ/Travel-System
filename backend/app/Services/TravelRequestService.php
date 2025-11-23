@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\TravelRequestApproved;
+use App\Events\TravelRequestCancelled;
 use App\Models\TravelRequest;
 use App\Models\User;
 use App\Repositories\TravelRequestRepository;
@@ -64,3 +66,29 @@ class TravelRequestService
         return $this->repository->delete($travelRequest);
     }
 }
+
+    /**
+     * Approve a travel request.
+     */
+    public function approve(TravelRequest $travelRequest, User $approver): TravelRequest
+    {
+        $approved = $this->repository->approve($travelRequest, $approver->id);
+        
+        // Dispatch event for notification
+        event(new TravelRequestApproved($approved));
+        
+        return $approved;
+    }
+
+    /**
+     * Cancel a travel request.
+     */
+    public function cancel(TravelRequest $travelRequest, User $canceller, ?string $reason = null): TravelRequest
+    {
+        $cancelled = $this->repository->cancel($travelRequest, $canceller->id, $reason);
+        
+        // Dispatch event for notification
+        event(new TravelRequestCancelled($cancelled));
+        
+        return $cancelled;
+    }

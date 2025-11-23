@@ -101,3 +101,30 @@ class TravelRequestRepository
         return $query;
     }
 }
+
+    /**
+     * Approve a travel request.
+     */
+    public function approve(TravelRequest $travelRequest, int $approvedBy): TravelRequest
+    {
+        $travelRequest->update([
+            'status' => 'approved',
+            'approved_by' => $approvedBy,
+        ]);
+
+        return $travelRequest->fresh(['user', 'approver', 'canceller']);
+    }
+
+    /**
+     * Cancel a travel request.
+     */
+    public function cancel(TravelRequest $travelRequest, int $cancelledBy, ?string $reason = null): TravelRequest
+    {
+        $travelRequest->update([
+            'status' => 'cancelled',
+            'cancelled_by' => $cancelledBy,
+            'cancelled_reason' => $reason,
+        ]);
+
+        return $travelRequest->fresh(['user', 'approver', 'canceller']);
+    }
