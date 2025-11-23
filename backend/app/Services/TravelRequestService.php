@@ -65,7 +65,6 @@ class TravelRequestService
     {
         return $this->repository->delete($travelRequest);
     }
-}
 
     /**
      * Approve a travel request.
@@ -92,3 +91,4 @@ class TravelRequestService
         
         return $cancelled;
     }
+}
