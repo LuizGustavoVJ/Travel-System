@@ -18,7 +18,7 @@ class TravelRequestController extends Controller
     ) {}
 
     /**
-     * Display a listing of the resource.
+     * Lista todos os pedidos de viagem do usuário autenticado (ou todos se for admin).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -30,7 +30,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Cria um novo pedido de viagem.
      */
     public function store(StoreTravelRequestRequest $request): JsonResponse
     {
@@ -43,7 +43,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Retorna os detalhes de um pedido de viagem específico.
      */
     public function show(string $id): JsonResponse
     {
@@ -55,7 +55,7 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization
+        // Verifica autorização
         if (!auth()->user()->isAdmin() && $travelRequest->user_id !== auth()->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
@@ -68,7 +68,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualiza um pedido de viagem existente.
      */
     public function update(UpdateTravelRequestRequest $request, string $id): JsonResponse
     {
@@ -80,7 +80,7 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization
+        // Verifica autorização
         if ($travelRequest->user_id !== auth()->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
@@ -96,7 +96,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove um pedido de viagem (soft delete).
      */
     public function destroy(string $id): JsonResponse
     {
@@ -108,7 +108,7 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization
+        // Verifica autorização
         if ($travelRequest->user_id !== auth()->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
@@ -123,7 +123,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Approve a travel request.
+     * Aprova um pedido de viagem (apenas administradores).
      */
     public function approve(string $id): JsonResponse
     {
@@ -135,7 +135,7 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization using Policy
+        // Verifica autorização using Policy
         if (!auth()->user()->can('approve', $travelRequest)) {
             return response()->json([
                 'message' => 'Unauthorized. Only admins can approve travel requests.',
@@ -151,7 +151,7 @@ class TravelRequestController extends Controller
     }
 
     /**
-     * Cancel a travel request.
+     * Cancela um pedido de viagem (apenas administradores, não pode cancelar se já aprovado).
      */
     public function cancel(string $id, Request $request): JsonResponse
     {
@@ -163,7 +163,7 @@ class TravelRequestController extends Controller
             ], 404);
         }
 
-        // Check authorization using Policy
+         // Verifica autorização usando Policy
         if (!auth()->user()->can('cancel', $travelRequest)) {
             return response()->json([
                 'message' => 'Unauthorized. Cannot cancel an approved travel request.',
