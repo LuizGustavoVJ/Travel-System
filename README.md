@@ -4,6 +4,8 @@
 
 Este projeto é um microsserviço completo para gerenciamento de pedidos de viagem corporativa, desenvolvido com uma arquitetura robusta e moderna. Ele inclui um backend em **Laravel** que expõe uma API REST e um frontend em **Vue.js 3** para interação do usuário.
 
+**Foco no Backend:** Como um microsserviço, o core do sistema é o backend. O frontend é um cliente de exemplo e sua execução é opcional para validar o funcionamento da API.
+
 ### Tecnologias Principais
 
 - **Backend**: Laravel 11
@@ -75,7 +77,7 @@ Este projeto é um microsserviço completo para gerenciamento de pedidos de viag
     docker-compose exec app php artisan migrate --seed
     ```
 
-7.  **Instale as Dependências do Frontend:**
+7.  **Instale as Dependências do Frontend (Opcional):**
 
     ```bash
     docker-compose exec app npm --prefix /var/www/html/frontend install
