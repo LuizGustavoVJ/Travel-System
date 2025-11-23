@@ -100,7 +100,6 @@ class TravelRequestRepository
 
         return $query;
     }
-}
 
     /**
      * Approve a travel request.
@@ -128,3 +127,4 @@ class TravelRequestRepository
 
         return $travelRequest->fresh(['user', 'approver', 'canceller']);
     }
+}
