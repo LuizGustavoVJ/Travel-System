@@ -3,9 +3,10 @@
 namespace App\Listeners;
 
 use App\Events\TravelRequestApproved;
+use App\Mail\TravelRequestApprovedMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendTravelRequestApprovedNotification implements ShouldQueue
 {
@@ -19,16 +20,7 @@ class SendTravelRequestApprovedNotification implements ShouldQueue
         $travelRequest = $event->travelRequest;
         $user = $travelRequest->user;
 
-        // Log the notification (in a real app, send email/SMS/push notification)
-        Log::info('Travel request approved notification sent', [
-            'user_id' => $user->id,
-            'user_email' => $user->email,
-            'travel_request_id' => $travelRequest->id,
-            'destination' => $travelRequest->destination,
-            'message' => "Your travel request to {$travelRequest->destination} has been approved!",
-        ]);
-
-        // TODO: Implement actual notification (email, SMS, push, etc.)
-        // Mail::to($user->email)->send(new TravelRequestApprovedMail($travelRequest));
+        // Send email notification
+        Mail::to($user->email)->send(new TravelRequestApprovedMail($travelRequest));
     }
 }
