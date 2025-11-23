@@ -28,4 +28,6 @@ Route::middleware('auth:api')->group(function () {
 
     // Travel Request routes
     Route::apiResource('travel-requests', TravelRequestController::class);
+    Route::post('/travel-requests/{id}/approve', [TravelRequestController::class, 'approve']);
+    Route::post('/travel-requests/{id}/cancel', [TravelRequestController::class, 'cancel']);
 });
