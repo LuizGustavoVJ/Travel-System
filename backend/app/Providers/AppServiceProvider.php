@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\TravelRequestRepository;
+use App\Services\TravelRequestService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TravelRequestRepository::class);
+        $this->app->singleton(TravelRequestService::class);
     }
 
     /**
