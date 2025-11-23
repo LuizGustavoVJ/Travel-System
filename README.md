@@ -1,140 +1,147 @@
-# Travel System - Sistema de Gerenciamento de Viagens Corporativas
+# Travel System - Microsserviço de Gerenciamento de Pedidos de Viagem
 
-Sistema completo para gerenciamento de pedidos de viagem corporativa, desenvolvido com Laravel (backend) e Vue.js 3 (frontend).
+## 1. Visão Geral
 
-## Tecnologias Utilizadas
+Este projeto é um microsserviço completo para gerenciamento de pedidos de viagem corporativa, desenvolvido com uma arquitetura robusta e moderna. Ele inclui um backend em **Laravel** que expõe uma API REST e um frontend em **Vue.js 3** para interação do usuário.
 
-### Backend
-- **Laravel 11** - Framework PHP
-- **MySQL 8** - Banco de dados
-- **Redis** - Cache e sessões
-- **RabbitMQ** - Filas assíncronas
-- **JWT** - Autenticação
-- **PHPUnit** - Testes
+### Tecnologias Principais
 
-### Frontend
-- **Vue.js 3** - Framework JavaScript
-- **Vite** - Build tool
-- **Vue Router** - Roteamento
-- **Pinia** - Gerenciamento de estado
-- **Axios** - Requisições HTTP
-- **Tailwind CSS** - Estilização
+- **Backend**: Laravel 11
+- **Frontend**: Vue.js 3 (Composition API)
+- **Banco de Dados**: MySQL 8
+- **Cache**: Redis
+- **Filas**: RabbitMQ
+- **Autenticação**: JWT (JSON Web Tokens)
+- **Containerização**: Docker e Docker Compose
 
-### DevOps
-- **Docker** - Containerização
-- **Docker Compose** - Orquestração de contêineres
-- **Nginx** - Servidor web
+## 2. Funcionalidades
 
-## Estrutura do Projeto
+- **Autenticação de Usuários**: Registro, login e gerenciamento de sessão com JWT.
+- **Controle de Acesso**: Perfis de `usuário` e `administrador` com permissões distintas.
+- **CRUD de Pedidos**: Usuários podem criar, listar, visualizar, atualizar e deletar seus próprios pedidos.
+- **Ações de Admin**: Administradores podem aprovar ou cancelar pedidos.
+- **Filtros Avançados**: Listagem de pedidos com filtros por status, destino e período.
+- **Notificações Assíncronas**: Envio de e-mails para aprovação e cancelamento de pedidos, processados em fila com RabbitMQ.
+- **Validação de Regras de Negócio**: Um pedido não pode ser cancelado se já foi aprovado.
 
-```
-Travel-System/
-├── backend/          # Aplicação Laravel
-├── frontend/         # Aplicação Vue.js 3
-├── docker/           # Configurações Docker
-│   ├── Dockerfile
-│   └── nginx/
-│       └── default.conf
-└── docker-compose.yml
-```
+## 3. Instalação e Execução (com Docker)
 
-## Requisitos
+### Pré-requisitos
 
-- Docker 20.10+
-- Docker Compose 2.0+
+- Docker
+- Docker Compose
 
-## Instalação e Execução
+### Passos para Instalação
 
-### 1. Clonar o repositório
+1.  **Clone o repositório:**
 
-```bash
-git clone https://github.com/LuizGustavoVJ/Travel-System.git
-cd Travel-System
-```
+    ```bash
+    git clone https://github.com/LuizGustavoVJ/Travel-System.git
+    cd Travel-System
+    ```
 
-### 2. Configurar o backend
+2.  **Configure as Variáveis de Ambiente:**
 
-```bash
-cd backend
-cp .env.example .env
-```
+    Copie o arquivo de exemplo do backend e configure-o:
 
-### 3. Subir os contêineres
+    ```bash
+    cp backend/.env.example backend/.env
+    ```
 
-```bash
-docker-compose up -d
-```
+    **Atenção**: Edite o arquivo `backend/.env` e configure as variáveis de banco de dados e e-mail. Para testes locais, você pode usar `MAIL_MAILER=log`.
 
-### 4. Instalar dependências do backend
+3.  **Suba os Contêineres:**
 
-```bash
-docker-compose exec app composer install
-```
+    ```bash
+    docker-compose up -d --build
+    ```
 
-### 5. Gerar chave da aplicação
+4.  **Instale as Dependências do Backend:**
 
-```bash
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan jwt:secret
-```
+    ```bash
+    docker-compose exec app composer install
+    ```
 
-### 6. Executar migrations e seeders
+5.  **Gere a Chave da Aplicação e do JWT:**
 
-```bash
-docker-compose exec app php artisan migrate --seed
-```
+    ```bash
+    docker-compose exec app php artisan key:generate
+    docker-compose exec app php artisan jwt:secret
+    ```
 
-### 7. Acessar a aplicação
+6.  **Execute as Migrations e Seeders:**
 
-- **API Backend:** http://localhost:8080
-- **RabbitMQ Management:** http://localhost:15672 (guest/guest)
+    ```bash
+    docker-compose exec app php artisan migrate --seed
+    ```
 
-## Executar Testes
+7.  **Instale as Dependências do Frontend:**
 
-### Backend
+    ```bash
+    docker-compose exec app npm --prefix /var/www/html/frontend install
+    ```
+
+8.  **Acesse a Aplicação:**
+
+    - **Frontend**: [http://localhost:8080](http://localhost:8080)
+    - **Backend API**: [http://localhost:8000/api](http://localhost:8000/api)
+
+## 4. Execução dos Testes
+
+### Testes do Backend (PHPUnit)
+
+Para executar todos os testes do backend, use o seguinte comando:
 
 ```bash
 docker-compose exec app php artisan test
 ```
 
-## Usuários de Teste
+### Testes do Frontend (Vitest)
 
-Após executar o seeder, os seguintes usuários estarão disponíveis:
+Para executar os testes do frontend, use o seguinte comando:
 
-- **Admin:** admin@example.com / password
-- **Usuários regulares:** Gerados automaticamente pelo seeder
+```bash
+docker-compose exec app npm --prefix /var/www/html/frontend test
+```
 
-## Estrutura do Backend
+## 5. Documentação da API (Postman)
 
-### Models
-- `User` - Usuários do sistema (com roles: user, admin)
-- `TravelRequest` - Pedidos de viagem
+Uma coleção completa do Postman está disponível na raiz do projeto:
 
-### Migrations
-- `add_role_to_users_table` - Adiciona coluna role na tabela users
-- `create_travel_requests_table` - Cria tabela de pedidos de viagem (com UUIDs e soft deletes)
+- `Travel-System-API.postman_collection.json`
 
-### Factories
-- `UserFactory` - Gera usuários de teste
-- `TravelRequestFactory` - Gera pedidos de viagem de teste
+Importe este arquivo no seu Postman para ter acesso a todos os endpoints da API, com exemplos de requisições e respostas.
 
-## Funcionalidades Implementadas (Fase 1)
+## 6. Informações Adicionais
 
-- ✅ Configuração Docker completa (app, db, redis, rabbitmq, nginx, php-worker)
-- ✅ Projeto Laravel inicializado
-- ✅ JWT configurado
-- ✅ RabbitMQ configurado
-- ✅ Migrations com UUIDs e Soft Deletes
-- ✅ Models com relacionamentos
-- ✅ Factories para testes
-- ✅ Database Seeder
+### Credenciais de Teste
 
-## Próximas Fases
+O `DatabaseSeeder` cria os seguintes usuários para teste:
 
-- **Fase 2:** Autenticação e CRUD básico
-- **Fase 3:** Regras de negócio e autorização
-- **Fase 4:** Notificações e frontend completo
+- **Administrador**:
+  - **E-mail**: `admin@example.com`
+  - **Senha**: `password`
+- **Usuário Comum**:
+  - **E-mail**: `user@example.com`
+  - **Senha**: `password`
 
-## Licença
+### Processamento de Filas
 
-MIT
+O serviço `php-worker` é responsável por processar as filas (envio de e-mails). Você pode monitorar os logs do worker com:
+
+```bash
+docker-compose logs -f php-worker
+```
+
+### Arquitetura do Projeto
+
+O projeto segue uma arquitetura robusta e escalável, separando as responsabilidades em camadas:
+
+- **Controllers**: Recebem as requisições HTTP.
+- **FormRequests**: Validam os dados de entrada.
+- **Services**: Orquestram a lógica de negócio.
+- **Repositories**: Abstraem o acesso ao banco de dados.
+- **Resources**: Padronizam as respostas da API.
+- **Events/Listeners**: Desacoplam as notificações da lógica principal.
+
+Esta arquitetura garante um código limpo, testável e de fácil manutenção.

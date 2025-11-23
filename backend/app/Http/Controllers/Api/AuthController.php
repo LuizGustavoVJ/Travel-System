@@ -14,7 +14,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
     /**
-     * Register a new user.
+     * Registra um novo usuário no sistema.
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -35,7 +35,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Login a user.
+     * Autentica um usuário e retorna um token JWT.
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -57,7 +57,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the authenticated user.
+     * Retorna os dados do usuário autenticado.
      */
     public function me(): JsonResponse
     {
@@ -67,7 +67,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout the user.
+     * Invalida o token JWT do usuário (logout).
      */
     public function logout(): JsonResponse
     {
@@ -79,7 +79,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Refresh the JWT token.
+     * Renova o token JWT do usuário.
      */
     public function refresh(): JsonResponse
     {

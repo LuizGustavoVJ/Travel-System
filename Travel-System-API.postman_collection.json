@@ -1,0 +1,517 @@
+{
+	"info": {
+		"_postman_id": "travel-system-api-v1",
+		"name": "Travel System API",
+		"description": "Coleção completa da API REST do Travel System - Microsserviço de Gerenciamento de Pedidos de Viagem Corporativa",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Autenticação",
+			"item": [
+				{
+					"name": "Registrar Usuário",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"João Silva\",\n    \"email\": \"joao.silva@example.com\",\n    \"password\": \"senha123\",\n    \"password_confirmation\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Registra um novo usuário no sistema. Por padrão, o usuário terá role 'user'."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"joao.silva@example.com\",\n    \"password\": \"senha123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Autentica o usuário e retorna um token JWT."
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Usuário Autenticado",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Retorna os dados do usuário autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "refresh"]
+						},
+						"description": "Renova o token JWT."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Invalida o token JWT do usuário."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticação (registro, login, logout, etc.)"
+		},
+		{
+			"name": "Pedidos de Viagem",
+			"item": [
+				{
+					"name": "Listar Pedidos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/travel-requests?page=1&per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número da página"
+								},
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Itens por página"
+								},
+								{
+									"key": "status",
+									"value": "requested",
+									"description": "Filtrar por status (requested, approved, cancelled)",
+									"disabled": true
+								},
+								{
+									"key": "destination",
+									"value": "São Paulo",
+									"description": "Filtrar por destino",
+									"disabled": true
+								},
+								{
+									"key": "start_date_from",
+									"value": "2025-01-01",
+									"description": "Data de início a partir de",
+									"disabled": true
+								},
+								{
+									"key": "start_date_to",
+									"value": "2025-12-31",
+									"description": "Data de início até",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista todos os pedidos de viagem do usuário autenticado (ou todos se for admin). Suporta filtros e paginação."
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requester_name\": \"João Silva\",\n    \"destination\": \"São Paulo\",\n    \"start_date\": \"2025-12-15\",\n    \"end_date\": \"2025-12-20\",\n    \"notes\": \"Reunião com cliente importante\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/travel-requests",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests"]
+						},
+						"description": "Cria um novo pedido de viagem."
+					},
+					"response": []
+				},
+				{
+					"name": "Obter Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/travel-requests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do pedido (UUID)"
+								}
+							]
+						},
+						"description": "Retorna os detalhes de um pedido específico."
+					},
+					"response": []
+				},
+				{
+					"name": "Atualizar Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requester_name\": \"João Silva\",\n    \"destination\": \"Rio de Janeiro\",\n    \"start_date\": \"2025-12-16\",\n    \"end_date\": \"2025-12-21\",\n    \"notes\": \"Reunião reagendada\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/travel-requests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do pedido (UUID)"
+								}
+							]
+						},
+						"description": "Atualiza um pedido de viagem existente. Apenas o proprietário pode atualizar."
+					},
+					"response": []
+				},
+				{
+					"name": "Deletar Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/travel-requests/:id",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do pedido (UUID)"
+								}
+							]
+						},
+						"description": "Remove um pedido de viagem (soft delete). Apenas o proprietário pode deletar."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciamento de pedidos de viagem (CRUD)"
+		},
+		{
+			"name": "Ações de Admin",
+			"item": [
+				{
+					"name": "Aprovar Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/travel-requests/:id/approve",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests", ":id", "approve"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do pedido (UUID)"
+								}
+							]
+						},
+						"description": "Aprova um pedido de viagem. Apenas administradores podem aprovar. Dispara notificação por e-mail ao solicitante."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Pedido",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cancelled_reason\": \"Orçamento insuficiente para o período solicitado\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/travel-requests/:id/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["travel-requests", ":id", "cancel"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do pedido (UUID)"
+								}
+							]
+						},
+						"description": "Cancela um pedido de viagem. Apenas administradores podem cancelar. Não é possível cancelar pedidos já aprovados. Dispara notificação por e-mail ao solicitante."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints exclusivos para administradores"
+		}
+	]
+}
