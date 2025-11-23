@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\TravelRequestApproved;
 use App\Events\TravelRequestCancelled;
+use App\Events\TravelRequestCreated;
 use App\Models\TravelRequest;
 use App\Models\User;
 use App\Repositories\TravelRequestRepository;
@@ -18,13 +19,13 @@ class TravelRequestService
     /**
      * Get all travel requests for a user.
      */
-    public function getAllForUser(User $user, array $filters = []): LengthAwarePaginator
+    public function getAllForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         if ($user->isAdmin()) {
-            return $this->repository->getAll($filters);
+            return $this->repository->getAll($filters, $perPage);
         }
 
-        return $this->repository->getAllForUser($user->id, $filters);
+        return $this->repository->getAllForUser($user->id, $filters, $perPage);
     }
 
     /**
@@ -44,7 +45,12 @@ class TravelRequestService
         $data['requester_name'] = $user->name;
         $data['status'] = 'requested';
 
-        return $this->repository->create($data);
+        $travelRequest = $this->repository->create($data);
+
+        // Dispatch event for notification
+        event(new TravelRequestCreated($travelRequest));
+
+        return $travelRequest;
     }
 
     /**
@@ -72,10 +78,10 @@ class TravelRequestService
     public function approve(TravelRequest $travelRequest, User $approver): TravelRequest
     {
         $approved = $this->repository->approve($travelRequest, $approver->id);
-        
+
         // Dispatch event for notification
         event(new TravelRequestApproved($approved));
-        
+
         return $approved;
     }
 
@@ -85,10 +91,10 @@ class TravelRequestService
     public function cancel(TravelRequest $travelRequest, User $canceller, ?string $reason = null): TravelRequest
     {
         $cancelled = $this->repository->cancel($travelRequest, $canceller->id, $reason);
-        
+
         // Dispatch event for notification
         event(new TravelRequestCancelled($cancelled));
-        
+
         return $cancelled;
     }
 }

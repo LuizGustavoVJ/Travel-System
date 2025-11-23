@@ -11,7 +11,7 @@ class TravelRequestRepository
     /**
      * Get all travel requests for a user with optional filters.
      */
-    public function getAllForUser(int $userId, array $filters = []): LengthAwarePaginator
+    public function getAllForUser(int $userId, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = TravelRequest::where('user_id', $userId);
 
@@ -19,13 +19,13 @@ class TravelRequestRepository
 
         return $query->with(['user', 'approver', 'canceller'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate($perPage);
     }
 
     /**
      * Get all travel requests (admin) with optional filters.
      */
-    public function getAll(array $filters = []): LengthAwarePaginator
+    public function getAll(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = TravelRequest::query();
 
@@ -33,7 +33,7 @@ class TravelRequestRepository
 
         return $query->with(['user', 'approver', 'canceller'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate($perPage);
     }
 
     /**
@@ -88,6 +88,14 @@ class TravelRequestRepository
 
         if (!empty($filters['end_date'])) {
             $query->whereDate('end_date', '<=', $filters['end_date']);
+        }
+
+        if (!empty($filters['start_date_from'])) {
+            $query->whereDate('start_date', '>=', $filters['start_date_from']);
+        }
+
+        if (!empty($filters['start_date_to'])) {
+            $query->whereDate('start_date', '<=', $filters['start_date_to']);
         }
 
         if (!empty($filters['created_from'])) {

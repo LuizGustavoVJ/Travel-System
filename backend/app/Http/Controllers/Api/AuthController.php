@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
@@ -24,6 +25,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'user',
         ]);
+
+        // Dispatch event for welcome email
+        event(new UserRegistered($user));
 
         $token = JWTAuth::fromUser($user);
 

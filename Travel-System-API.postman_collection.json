@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "travel-system-api-v1",
 		"name": "Travel System API",
-		"description": "Coleção completa da API REST do Travel System - Microsserviço de Gerenciamento de Pedidos de Viagem Corporativa",
+		"description": "Coleção completa da API REST do Travel System - Microsserviço de Gerenciamento de Pedidos de Viagem Corporativa\n\n**Usuários pré-criados pelo seeder:**\n- Admin: `admin@example.com` / `password`\n- User 1: `user1@example.com` / `password`\n- User 2: `user2@example.com` / `password`",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -18,13 +18,19 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8000/api",
+			"value": "http://localhost:8080/api",
 			"type": "string"
 		},
 		{
 			"key": "access_token",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "travel_request_id",
+			"value": "",
+			"type": "string",
+			"description": "ID do último pedido de viagem criado (UUID)"
 		}
 	],
 	"item": [
@@ -32,48 +38,7 @@
 			"name": "Autenticação",
 			"item": [
 				{
-					"name": "Registrar Usuário",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"João Silva\",\n    \"email\": \"joao.silva@example.com\",\n    \"password\": \"senha123\",\n    \"password_confirmation\": \"senha123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/register",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "register"]
-						},
-						"description": "Registra um novo usuário no sistema. Por padrão, o usuário terá role 'user'."
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
+					"name": "Login Admin",
 					"event": [
 						{
 							"listen": "test",
@@ -81,7 +46,8 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const jsonData = pm.response.json();",
-									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"    pm.collectionVariables.set('access_token', jsonData.token);",
+									"    pm.collectionVariables.set('user_id', jsonData.user.id);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -102,14 +68,145 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"joao.silva@example.com\",\n    \"password\": \"senha123\"\n}"
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/login",
 							"host": ["{{base_url}}"],
 							"path": ["auth", "login"]
 						},
-						"description": "Autentica o usuário e retorna um token JWT."
+						"description": "Login como administrador. Salva automaticamente o token na variável `access_token`."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.token);",
+									"    pm.collectionVariables.set('user_id', jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user1@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login como usuário comum (User 1). Salva automaticamente o token na variável `access_token`."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.token);",
+									"    pm.collectionVariables.set('user_id', jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user2@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login como usuário comum (User 2). Salva automaticamente o token na variável `access_token`."
+					},
+					"response": []
+				},
+				{
+					"name": "Registrar Novo Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Novo Usuário\",\n    \"email\": \"novo.usuario@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Registra um novo usuário no sistema. Por padrão, o usuário terá role 'user' (não admin). A senha deve ter no mínimo 8 caracteres.\n\n⚠️ **IMPORTANTE:** Este request NÃO salva o token automaticamente para não substituir o token do usuário logado. Se você quiser usar o novo usuário, faça login com ele após o registro."
 					},
 					"response": []
 				},
@@ -138,7 +235,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["auth", "me"]
 						},
-						"description": "Retorna os dados do usuário autenticado."
+						"description": "Retorna os dados do usuário autenticado (baseado no token JWT)."
 					},
 					"response": []
 				},
@@ -167,7 +264,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["auth", "refresh"]
 						},
-						"description": "Renova o token JWT."
+						"description": "Renova o token JWT. Retorna um novo token válido."
 					},
 					"response": []
 				},
@@ -196,7 +293,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["auth", "logout"]
 						},
-						"description": "Invalida o token JWT do usuário."
+						"description": "Invalida o token JWT do usuário (logout)."
 					},
 					"response": []
 				}
@@ -267,12 +364,26 @@
 								}
 							]
 						},
-						"description": "Lista todos os pedidos de viagem do usuário autenticado (ou todos se for admin). Suporta filtros e paginação."
+						"description": "Lista todos os pedidos de viagem do usuário autenticado (ou todos se for admin). Suporta filtros e paginação.\n\n**Comportamento:**\n- Usuário comum: vê apenas seus próprios pedidos\n- Admin: vê todos os pedidos do sistema"
 					},
 					"response": []
 				},
 				{
 					"name": "Criar Pedido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('travel_request_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -297,19 +408,24 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"requester_name\": \"João Silva\",\n    \"destination\": \"São Paulo\",\n    \"start_date\": \"2025-12-15\",\n    \"end_date\": \"2025-12-20\",\n    \"notes\": \"Reunião com cliente importante\"\n}"
+							"raw": "{\n    \"destination\": \"São Paulo, Brasil\",\n    \"start_date\": \"2025-12-15\",\n    \"end_date\": \"2025-12-20\",\n    \"notes\": \"Reunião com cliente importante\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "{{base_url}}/travel-requests",
 							"host": ["{{base_url}}"],
 							"path": ["travel-requests"]
 						},
-						"description": "Cria um novo pedido de viagem."
+						"description": "Cria um novo pedido de viagem. O `requester_name` é preenchido automaticamente com o nome do usuário autenticado. O status inicial é 'requested'. Salva automaticamente o ID do pedido na variável `travel_request_id`."
 					},
 					"response": []
 				},
 				{
-					"name": "Obter Pedido",
+					"name": "Obter Pedido por ID",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -329,18 +445,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/travel-requests/:id",
+							"raw": "{{base_url}}/travel-requests/{{travel_request_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["travel-requests", ":id"],
-							"variable": [
-								{
-									"key": "id",
-									"value": "1",
-									"description": "ID do pedido (UUID)"
-								}
-							]
+							"path": ["travel-requests", "{{travel_request_id}}"]
 						},
-						"description": "Retorna os detalhes de um pedido específico."
+						"description": "Retorna os detalhes de um pedido específico. Use a variável `{{travel_request_id}}` ou substitua pelo UUID do pedido.\n\n**Autorização:**\n- Usuário comum: só pode ver seus próprios pedidos\n- Admin: pode ver qualquer pedido"
 					},
 					"response": []
 				},
@@ -370,21 +479,19 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"requester_name\": \"João Silva\",\n    \"destination\": \"Rio de Janeiro\",\n    \"start_date\": \"2025-12-16\",\n    \"end_date\": \"2025-12-21\",\n    \"notes\": \"Reunião reagendada\"\n}"
+							"raw": "{\n    \"destination\": \"Rio de Janeiro, Brasil\",\n    \"start_date\": \"2025-12-16\",\n    \"end_date\": \"2025-12-21\",\n    \"notes\": \"Reunião reagendada\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/travel-requests/:id",
+							"raw": "{{base_url}}/travel-requests/{{travel_request_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["travel-requests", ":id"],
-							"variable": [
-								{
-									"key": "id",
-									"value": "1",
-									"description": "ID do pedido (UUID)"
-								}
-							]
+							"path": ["travel-requests", "{{travel_request_id}}"]
 						},
-						"description": "Atualiza um pedido de viagem existente. Apenas o proprietário pode atualizar."
+						"description": "Atualiza um pedido de viagem existente. Apenas o proprietário pode atualizar. Use a variável `{{travel_request_id}}` ou substitua pelo UUID do pedido.\n\n**Campos opcionais:** Todos os campos são opcionais (usar 'sometimes' na validação)."
 					},
 					"response": []
 				},
@@ -409,18 +516,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/travel-requests/:id",
+							"raw": "{{base_url}}/travel-requests/{{travel_request_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["travel-requests", ":id"],
-							"variable": [
-								{
-									"key": "id",
-									"value": "1",
-									"description": "ID do pedido (UUID)"
-								}
-							]
+							"path": ["travel-requests", "{{travel_request_id}}"]
 						},
-						"description": "Remove um pedido de viagem (soft delete). Apenas o proprietário pode deletar."
+						"description": "Remove um pedido de viagem (soft delete). Apenas o proprietário pode deletar. Use a variável `{{travel_request_id}}` ou substitua pelo UUID do pedido."
 					},
 					"response": []
 				}
@@ -451,18 +551,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/travel-requests/:id/approve",
+							"raw": "{{base_url}}/travel-requests/{{travel_request_id}}/approve",
 							"host": ["{{base_url}}"],
-							"path": ["travel-requests", ":id", "approve"],
-							"variable": [
-								{
-									"key": "id",
-									"value": "1",
-									"description": "ID do pedido (UUID)"
-								}
-							]
+							"path": ["travel-requests", "{{travel_request_id}}", "approve"]
 						},
-						"description": "Aprova um pedido de viagem. Apenas administradores podem aprovar. Dispara notificação por e-mail ao solicitante."
+						"description": "Aprova um pedido de viagem. **Apenas administradores podem aprovar.** Dispara notificação por e-mail ao solicitante. Use a variável `{{travel_request_id}}` ou substitua pelo UUID do pedido.\n\n**Pré-requisito:** Fazer login como admin (`admin@example.com`)"
 					},
 					"response": []
 				},
@@ -492,26 +585,344 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"cancelled_reason\": \"Orçamento insuficiente para o período solicitado\"\n}"
+							"raw": "{\n    \"cancelled_reason\": \"Orçamento insuficiente para o período solicitado\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/travel-requests/:id/cancel",
+							"raw": "{{base_url}}/travel-requests/{{travel_request_id}}/cancel",
 							"host": ["{{base_url}}"],
-							"path": ["travel-requests", ":id", "cancel"],
-							"variable": [
-								{
-									"key": "id",
-									"value": "1",
-									"description": "ID do pedido (UUID)"
-								}
-							]
+							"path": ["travel-requests", "{{travel_request_id}}", "cancel"]
 						},
-						"description": "Cancela um pedido de viagem. Apenas administradores podem cancelar. Não é possível cancelar pedidos já aprovados. Dispara notificação por e-mail ao solicitante."
+						"description": "Cancela um pedido de viagem. **Apenas administradores podem cancelar.** Não é possível cancelar pedidos já aprovados. Dispara notificação por e-mail ao solicitante. Use a variável `{{travel_request_id}}` ou substitua pelo UUID do pedido.\n\n**Pré-requisito:** Fazer login como admin (`admin@example.com`)"
 					},
 					"response": []
 				}
 			],
-			"description": "Endpoints exclusivos para administradores"
+			"description": "Endpoints exclusivos para administradores. Requer login como admin."
+		},
+		{
+			"name": "Cenários de Teste",
+			"item": [
+				{
+					"name": "Cenário 1: Usuário cria pedido",
+					"item": [
+						{
+							"name": "1. Login User 1",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user1@example.com\",\n    \"password\": \"password\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('access_token', jsonData.token);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"response": []
+						},
+						{
+							"name": "2. Criar Pedido",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"destination\": \"Curitiba, Brasil\",\n    \"start_date\": \"2025-12-20\",\n    \"end_date\": \"2025-12-25\",\n    \"notes\": \"Visita técnica\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/travel-requests",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests"]
+								}
+							},
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('travel_request_id', jsonData.data.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"response": []
+						},
+						{
+							"name": "3. Listar Meus Pedidos",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/travel-requests",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests"]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Fluxo completo: Usuário faz login, cria um pedido e lista seus pedidos."
+				},
+				{
+					"name": "Cenário 2: Admin aprova pedido",
+					"item": [
+						{
+							"name": "1. Login Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('access_token', jsonData.token);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"response": []
+						},
+						{
+							"name": "2. Listar Todos os Pedidos (Admin)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/travel-requests",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Aprovar Pedido",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/travel-requests/{{travel_request_id}}/approve",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests", "{{travel_request_id}}", "approve"]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Fluxo completo: Admin faz login, lista todos os pedidos e aprova um pedido."
+				},
+				{
+					"name": "Cenário 3: Usuário atualiza seu pedido",
+					"item": [
+						{
+							"name": "1. Login User 1",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user1@example.com\",\n    \"password\": \"password\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('access_token', jsonData.token);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"response": []
+						},
+						{
+							"name": "2. Atualizar Pedido",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"destination\": \"Porto Alegre, Brasil\",\n    \"start_date\": \"2025-12-22\",\n    \"end_date\": \"2025-12-27\",\n    \"notes\": \"Destino alterado\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/travel-requests/{{travel_request_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests", "{{travel_request_id}}"]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Fluxo: Usuário atualiza um pedido que ele criou."
+				},
+				{
+					"name": "Cenário 4: Admin cancela pedido",
+					"item": [
+						{
+							"name": "1. Login Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["auth", "login"]
+								}
+							},
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('access_token', jsonData.token);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"response": []
+						},
+						{
+							"name": "2. Cancelar Pedido",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"cancelled_reason\": \"Orçamento insuficiente\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/travel-requests/{{travel_request_id}}/cancel",
+									"host": ["{{base_url}}"],
+									"path": ["travel-requests", "{{travel_request_id}}", "cancel"]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Fluxo: Admin cancela um pedido com motivo."
+				}
+			],
+			"description": "Cenários de teste completos para validar o sistema end-to-end"
 		}
 	]
 }

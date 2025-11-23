@@ -22,9 +22,10 @@ class TravelRequestController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $filters = $request->only(['status', 'destination', 'start_date', 'end_date', 'created_from', 'created_to']);
-        
-        $travelRequests = $this->service->getAllForUser(auth()->user(), $filters);
+        $filters = $request->only(['status', 'destination', 'start_date', 'end_date', 'start_date_from', 'start_date_to', 'created_from', 'created_to']);
+        $perPage = $request->input('per_page', 15);
+
+        $travelRequests = $this->service->getAllForUser(auth()->user(), $filters, $perPage);
 
         return TravelRequestResource::collection($travelRequests);
     }
@@ -87,6 +88,13 @@ class TravelRequestController extends Controller
             ], 403);
         }
 
+        // Não permite atualizar pedidos aprovados ou cancelados
+        if (in_array($travelRequest->status, ['approved', 'cancelled'])) {
+            return response()->json([
+                'message' => 'Cannot update a travel request that is already ' . $travelRequest->status,
+            ], 403);
+        }
+
         $updated = $this->service->update($travelRequest, $request->validated());
 
         return response()->json([
@@ -112,6 +120,13 @@ class TravelRequestController extends Controller
         if ($travelRequest->user_id !== auth()->id()) {
             return response()->json([
                 'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        // Não permite deletar pedidos aprovados ou cancelados
+        if (in_array($travelRequest->status, ['approved', 'cancelled'])) {
+            return response()->json([
+                'message' => 'Cannot delete a travel request that is already ' . $travelRequest->status,
             ], 403);
         }
 

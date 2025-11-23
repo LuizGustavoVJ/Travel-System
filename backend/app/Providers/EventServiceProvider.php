@@ -4,8 +4,12 @@ namespace App\Providers;
 
 use App\Events\TravelRequestApproved;
 use App\Events\TravelRequestCancelled;
+use App\Events\TravelRequestCreated;
+use App\Events\UserRegistered;
 use App\Listeners\SendTravelRequestApprovedNotification;
 use App\Listeners\SendTravelRequestCancelledNotification;
+use App\Listeners\SendTravelRequestCreatedNotification;
+use App\Listeners\SendWelcomeEmailNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -21,6 +25,12 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        UserRegistered::class => [
+            SendWelcomeEmailNotification::class,
+        ],
+        TravelRequestCreated::class => [
+            SendTravelRequestCreatedNotification::class,
         ],
         TravelRequestApproved::class => [
             SendTravelRequestApprovedNotification::class,

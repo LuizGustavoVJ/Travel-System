@@ -1,0 +1,72 @@
+# ============================================
+# Dockerfile para Testes - Inclui dependências dev
+# ============================================
+FROM php:8.2-fpm
+
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    default-mysql-client \
+    libicu-dev \
+    libssl-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instala extensões PHP essenciais
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    sockets \
+    intl \
+    opcache
+
+# Instala Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Instala Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Define diretório de trabalho
+WORKDIR /var/www/html
+
+# Copia arquivos de dependências primeiro (cache layer)
+COPY composer.json composer.lock* ./
+
+# Instala TODAS as dependências (incluindo dev para testes)
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# Copia código da aplicação
+COPY . .
+
+# Executa scripts do Composer
+RUN composer dump-autoload --optimize
+
+# Cria diretórios necessários com permissões corretas
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/logs \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
+# Entrypoint não é necessário para testes (setup é feito via volumes)
+
+# Define usuário não-root
+USER www-data
+
+# Expõe porta PHP-FPM (não usado em testes, mas mantido para compatibilidade)
+EXPOSE 9000
+
+# Comando padrão: executar PHPUnit
+CMD ["vendor/bin/phpunit", "--colors=always"]
+
