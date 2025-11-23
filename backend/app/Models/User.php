@@ -7,49 +7,62 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+/**
+ * Model User (Usuário)
+ *
+ * Representa um usuário do sistema.
+ *
+ * Características:
+ * - Implementa JWTSubject para autenticação JWT
+ * - Roles possíveis: 'admin', 'user'
+ * - Senha é automaticamente criptografada (cast 'hashed')
+ *
+ * Relacionamentos:
+ * - hasMany TravelRequest (pedidos de viagem do usuário)
+ */
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * Campos que podem ser preenchidos em massa (mass assignment).
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
+        'name',         // Nome do usuário
+        'email',       // Email (único)
+        'password',    // Senha (criptografada automaticamente)
+        'role',        // Role: 'admin' ou 'user'
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * Atributos que devem ser ocultados na serialização (não aparecem em JSON).
      *
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password',        // Senha nunca deve ser exposta
+        'remember_token',  // Token de "lembrar-me"
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Atributos que devem ser convertidos para tipos específicos.
      *
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at' => 'datetime',  // Converte para Carbon\Carbon
+            'password' => 'hashed',             // Criptografa automaticamente ao salvar
         ];
     }
 
     /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
+     * Retorna o identificador que será armazenado no claim 'sub' do JWT.
      *
-     * @return mixed
+     * @return mixed ID do usuário
      */
     public function getJWTIdentifier()
     {
@@ -57,21 +70,21 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
+     * Retorna claims customizados a serem adicionados ao JWT.
      *
-     * @return array
+     * @return array Claims customizados (role)
      */
     public function getJWTCustomClaims()
     {
         return [
-            'role' => $this->role,
+            'role' => $this->role,  // Adiciona role ao token JWT
         ];
     }
 
     /**
-     * Check if user is admin.
+     * Verifica se o usuário é administrador.
      *
-     * @return bool
+     * @return bool True se role for 'admin'
      */
     public function isAdmin(): bool
     {
@@ -79,7 +92,9 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Get the travel requests for the user.
+     * Relacionamento: Usuário tem muitos pedidos de viagem.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function travelRequests()
     {

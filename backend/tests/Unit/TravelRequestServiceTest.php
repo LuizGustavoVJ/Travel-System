@@ -146,5 +146,100 @@ class TravelRequestServiceTest extends TestCase
 
         $this->assertNull($result);
     }
+
+    public function test_update_throws_validation_exception_when_end_date_before_start_date_from_database(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+            'start_date' => now()->addDays(10),
+            'end_date' => now()->addDays(15),
+        ]);
+
+        $data = [
+            'end_date' => now()->addDays(5)->toDateString(), // Antes do start_date do banco
+        ];
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        try {
+            $this->service->update($travelRequest, $data);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $this->assertArrayHasKey('end_date', $errors);
+            $this->assertContains('A data de volta deve ser posterior à data de ida.', $errors['end_date']);
+            throw $e;
+        }
+    }
+
+    public function test_update_throws_validation_exception_when_end_date_before_provided_start_date(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+            'start_date' => now()->addDays(10),
+            'end_date' => now()->addDays(15),
+        ]);
+
+        $data = [
+            'start_date' => now()->addDays(20)->toDateString(),
+            'end_date' => now()->addDays(15)->toDateString(), // Antes do start_date fornecido
+        ];
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        try {
+            $this->service->update($travelRequest, $data);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $this->assertArrayHasKey('end_date', $errors);
+            $this->assertContains('A data de volta deve ser posterior à data de ida.', $errors['end_date']);
+            throw $e;
+        }
+    }
+
+    public function test_update_succeeds_when_end_date_after_start_date_from_database(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+            'start_date' => now()->addDays(10),
+            'end_date' => now()->addDays(15),
+        ]);
+
+        $data = [
+            'end_date' => now()->addDays(20)->toDateString(), // Depois do start_date do banco
+        ];
+
+        $updated = $this->service->update($travelRequest, $data);
+
+        $this->assertEquals(now()->addDays(20)->toDateString(), $updated->end_date->toDateString());
+    }
+
+    public function test_update_succeeds_when_both_dates_are_valid(): void
+    {
+        $user = User::factory()->create();
+        $travelRequest = TravelRequest::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'requested',
+            'start_date' => now()->addDays(10),
+            'end_date' => now()->addDays(15),
+        ]);
+
+        $data = [
+            'start_date' => now()->addDays(20)->toDateString(),
+            'end_date' => now()->addDays(25)->toDateString(), // Depois do start_date fornecido
+        ];
+
+        $updated = $this->service->update($travelRequest, $data);
+
+        $this->assertEquals(now()->addDays(20)->toDateString(), $updated->start_date->toDateString());
+        $this->assertEquals(now()->addDays(25)->toDateString(), $updated->end_date->toDateString());
+    }
 }
 
