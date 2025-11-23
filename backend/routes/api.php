@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TravelRequestController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TravelRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
