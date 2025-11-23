@@ -12,7 +12,7 @@ class AuthTest extends TestCase
 
     public function test_user_can_register(): void
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -35,7 +35,7 @@ class AuthTest extends TestCase
     {
         User::factory()->create(['email' => 'existing@example.com']);
 
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
             'email' => 'existing@example.com',
             'password' => 'password123',
@@ -53,7 +53,7 @@ class AuthTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/auth/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
         ]);
@@ -73,7 +73,7 @@ class AuthTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/auth/login', [
             'email' => 'test@example.com',
             'password' => 'wrongpassword',
         ]);
@@ -88,7 +88,7 @@ class AuthTest extends TestCase
         $token = auth()->login($user);
 
         $response = $this->withHeader('Authorization', "Bearer $token")
-            ->getJson('/api/me');
+            ->getJson('/api/auth/me');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -102,7 +102,7 @@ class AuthTest extends TestCase
         $token = auth()->login($user);
 
         $response = $this->withHeader('Authorization', "Bearer $token")
-            ->postJson('/api/logout');
+            ->postJson('/api/auth/logout');
 
         $response->assertStatus(200)
             ->assertJson(['message' => 'Logout successful']);
@@ -110,7 +110,7 @@ class AuthTest extends TestCase
 
     public function test_unauthenticated_user_cannot_access_protected_routes(): void
     {
-        $response = $this->getJson('/api/me');
+        $response = $this->getJson('/api/auth/me');
 
         $response->assertStatus(401);
     }
