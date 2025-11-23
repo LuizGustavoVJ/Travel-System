@@ -15,18 +15,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Auth routes (public)
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    
+    // Protected auth routes
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/refresh', [AuthController::class, 'refresh']);
+    });
+});
 
-// Protected routes
+// Travel Request routes (protected)
 Route::middleware('auth:api')->group(function () {
-    // Auth routes
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
-
-    // Travel Request routes
     Route::apiResource('travel-requests', TravelRequestController::class);
     Route::post('/travel-requests/{id}/approve', [TravelRequestController::class, 'approve']);
     Route::post('/travel-requests/{id}/cancel', [TravelRequestController::class, 'cancel']);
