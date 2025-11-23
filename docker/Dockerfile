@@ -24,7 +24,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copy existing application directory contents
-COPY ../backend /var/www/html
+COPY . /var/www/html
 
 # Copy existing application directory permissions
 RUN chown -R www-data:www-data /var/www/html

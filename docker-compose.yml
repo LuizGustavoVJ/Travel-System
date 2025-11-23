@@ -63,6 +63,15 @@ services:
     networks:
       - travel-network
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: travel-system-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - travel-network
+
   php-worker:
     build:
       context: ./backend

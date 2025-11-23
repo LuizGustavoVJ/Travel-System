@@ -156,7 +156,7 @@ class TravelRequestTest extends TestCase
             ->postJson('/api/travel-requests', [
                 'destination' => '',
                 'start_date' => 'invalid-date',
-                'end_date' => now()->subDays(1)->toDateString(),
+                'end_date' => 'invalid-date',
             ]);
 
         $response->assertStatus(422)
